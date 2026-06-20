@@ -19,6 +19,8 @@ import {
   ChevronRight,
   PackageCheck,
   RefreshCw,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
 import {
   type Customer,
@@ -834,7 +836,7 @@ function TasksSection({
                     <span className="font-mono text-xs text-slate-400">{t.code}</span>
                     <StatusBadge status={t.status} />
                   </div>
-                  <p className="text-sm font-medium text-slate-800 mt-1 truncate">
+                  <p className="text-sm font-medium text-slate-800 mt-1">
                     {t.customers?.name || '—'}
                     {t.customers?.region && (
                       <span className="text-xs text-slate-400 font-normal">
@@ -843,7 +845,59 @@ function TasksSection({
                       </span>
                     )}
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{t.description}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{t.description}</p>
+                  
+                  {t.notes && (
+                    <p className="text-xs text-slate-600 mt-2 italic bg-slate-50 rounded px-2 py-1.5">
+                      "{t.notes}"
+                    </p>
+                  )}
+
+                  {t.materials && t.materials.length > 0 && (
+                    <div className="mt-2 text-xs bg-slate-50 border border-slate-100 rounded-lg p-2.5">
+                      <p className="font-semibold text-slate-500 mb-1 flex justify-between">
+                        <span>Vật tư phụ tùng:</span>
+                        <span className="text-brand-600">
+                          Tổng: {formatCurrency(t.materials.reduce((sum, m) => sum + m.price * m.quantity, 0))}
+                        </span>
+                      </p>
+                      <div className="space-y-0.5 text-[11px] text-slate-600">
+                        {t.materials.map((m) => (
+                          <div key={m.id} className="flex justify-between">
+                            <span>· {m.name} (x{m.quantity})</span>
+                            <span className="font-medium">{formatCurrency(m.price * m.quantity)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {t.photos && t.photos.length > 0 && (
+                    <div className="mt-2 flex gap-1.5 overflow-x-auto no-scrollbar py-1">
+                      {t.photos.map((url, idx) => (
+                        <div key={idx} className="w-10 h-10 rounded-lg border border-slate-200 overflow-hidden bg-slate-50 flex-shrink-0">
+                          <img src={url} alt={`Hiện trường ${idx + 1}`} className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {(t.check_in_at || t.check_out_at) && (
+                    <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-3 pt-2.5 border-t border-slate-100 text-[11px]">
+                      {t.check_in_at && (
+                        <span className="flex items-center gap-1.5 text-indigo-700 bg-indigo-50/70 px-2 py-0.5 rounded font-medium border border-indigo-100/50">
+                          <LogIn size={11} className="text-indigo-500" />
+                          <span className="text-slate-400 font-normal">Check-in:</span> {formatDateTime(t.check_in_at)}
+                        </span>
+                      )}
+                      {t.check_out_at && (
+                        <span className="flex items-center gap-1.5 text-cyan-700 bg-cyan-50/70 px-2 py-0.5 rounded font-medium border border-cyan-100/50">
+                          <LogOut size={11} className="text-cyan-500" />
+                          <span className="text-slate-400 font-normal">Check-out:</span> {formatDateTime(t.check_out_at)}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="text-right flex-shrink-0 hidden sm:block">
@@ -1064,8 +1118,8 @@ function TaskDetail({ task, onClose }: { task: TaskWithRelations; onClose: () =>
         <div className="grid grid-cols-2 gap-3">
           <InfoRow icon={UserIcon} label="Kỹ thuật viên" value={task.technician_name || '—'} />
           {p && <InfoRow icon={Package} label="Dịch vụ" value={p.name} />}
-          <InfoRow icon={Clock} label="Check-in" value={formatDateTime(task.check_in_at)} />
-          <InfoRow icon={Clock} label="Check-out" value={formatDateTime(task.check_out_at)} />
+          <InfoRow icon={LogIn} label="Check-in" value={task.check_in_at ? formatDateTime(task.check_in_at) : '—'} />
+          <InfoRow icon={LogOut} label="Check-out" value={task.check_out_at ? formatDateTime(task.check_out_at) : '—'} />
         </div>
 
         {task.materials && task.materials.length > 0 && (
@@ -1230,10 +1284,21 @@ function VerifySection({ taskRows, onRefresh }: { taskRows: TaskWithRelations[];
                         ))}
                       </div>
                     )}
-                    {t.check_in_at && t.check_out_at && (
-                      <p className="text-[11px] text-slate-400 mt-2">
-                        {formatDateTime(t.check_in_at)} → {formatDateTime(t.check_out_at)}
-                      </p>
+                    {(t.check_in_at || t.check_out_at) && (
+                      <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-3 pt-2.5 border-t border-slate-100 text-[11px]">
+                        {t.check_in_at && (
+                          <span className="flex items-center gap-1.5 text-indigo-700 bg-indigo-50/70 px-2 py-0.5 rounded font-medium border border-indigo-100/50">
+                            <LogIn size={11} className="text-indigo-500" />
+                            <span className="text-slate-400 font-normal">Check-in:</span> {formatDateTime(t.check_in_at)}
+                          </span>
+                        )}
+                        {t.check_out_at && (
+                          <span className="flex items-center gap-1.5 text-cyan-700 bg-cyan-50/70 px-2 py-0.5 rounded font-medium border border-cyan-100/50">
+                            <LogOut size={11} className="text-cyan-500" />
+                            <span className="text-slate-400 font-normal">Check-out:</span> {formatDateTime(t.check_out_at)}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
